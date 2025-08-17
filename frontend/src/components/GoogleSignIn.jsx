@@ -32,21 +32,10 @@ const GoogleSignIn = ({ onSignInSuccess }) => {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-      }}
-    >
-      <button
-        onClick={handleGoogleSignIn}
-        style={{ padding: "10px 20px", fontSize: "16px" }}
-      >
-        Sign in with Google
-      </button>
-    </div>
+    <button className="btn btn-google" onClick={handleGoogleSignIn}>
+      <span className="g-logo">G</span>
+      Continue with Google
+    </button>
   );
 };
 
