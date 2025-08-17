@@ -1,0 +1,26 @@
+from openai import OpenAI
+from dotenv import load_dotenv
+import os
+
+from ai.ai import LLM
+
+load_dotenv()  # Loads .env into environment variables
+
+api_key = os.getenv("OPENROUTER_API_KEY")
+
+llm = LLM("openrouter", "grok-3-mini", system_prompt="Answer in 1 word, don't think at all, just respond.")
+
+
+
+
+# res = llm.generate_response("What is the capital of France?")
+# print(res)
+
+# res = llm.generate_response("What was my last question?")
+# print(res)
+
+# res = llm.chat_response("What is the capital of France?")
+# print(res)
+
+# res = llm.chat_response("What is the capital of Pakistan?")
+# print(res)
