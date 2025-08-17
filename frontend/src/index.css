@@ -1,6 +1,90 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
 :root {
+  /* Palette */
+  --bg: #0b0b0c;
+  --surface-1: #121214;
+  --surface-2: #17171a;
+  --stroke: rgba(255, 255, 255, 0.08);
+  --text: #fafafa;
+  --muted: rgba(255, 255, 255, 0.72);
+  --muted-2: rgba(255, 255, 255, 0.56);
+  --accent: #ff2e74; /* rose, sensual accent */
+  --accent-contrast: #0b0b0c;
+  --success: #16c47f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 10px;
+}
+
+/* Selection */
+::selection {
+  background: rgba(255, 46, 116, 0.3);
+  color: #fff;
+}
+
+::-moz-selection {
+  background: rgba(255, 46, 116, 0.3);
+  color: #fff;
+}
+
+/* Focus */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+:root {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -42,7 +126,6 @@ body {
   padding: 0;
 }
 
-/* Custom scrollbar for the entire page */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -60,7 +143,6 @@ body {
   background: linear-gradient(135deg, #ff69b4, #9370db);
 }
 
-/* Selection styling */
 ::selection {
   background: rgba(255, 20, 147, 0.3);
   color: #fff;
@@ -71,7 +153,6 @@ body {
   color: #fff;
 }
 
-/* Focus styles */
 *:focus {
   outline: none;
 }
@@ -79,4 +160,4 @@ body {
 *:focus-visible {
   outline: 2px solid #ff1493;
   outline-offset: 2px;
-}
+} */
