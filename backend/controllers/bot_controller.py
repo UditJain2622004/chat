@@ -51,3 +51,8 @@ def get_bots_by_user_id(user_id: str) -> list[dict]:
         items.append(doc)
     return items
 
+
+def is_bot_owned_by_user(bot_id: str, user_id: str) -> bool:
+    doc = collection.find_one({"_id": ObjectId(bot_id), "user_id": user_id})
+    return doc is not None
+

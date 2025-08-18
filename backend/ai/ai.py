@@ -64,8 +64,8 @@ class LLM:
             )
 
             # print(completion)
-            print(completion.choices[0].message.content)
-            print(completion.choices[0].message.reasoning_details[0].get("text"))
+            # print(completion.choices[0].message.content)
+            # print(completion.choices[0].message.reasoning_details[0].get("text"))
 
             if completion.choices:
                 return completion.choices[0].message.content

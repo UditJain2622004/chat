@@ -2,7 +2,6 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, Dict, Any
 
 class ChatDetails(BaseModel):
-    uid: str
     user_id: str
     bot_id: str
     chat_id: str

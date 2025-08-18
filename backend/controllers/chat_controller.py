@@ -2,6 +2,7 @@ from bson.objectid import ObjectId
 from mongo import db
 from models.chat_model import Chat, ChatMessage
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 
 
 collection = db['chats']
@@ -62,4 +63,45 @@ def get_chat_by_bot_and_user(bot_id: str, user_id: str) -> dict | None:
     if doc:
         doc["_id"] = str(doc["_id"])  # make JSON friendly
     return doc
+
+
+def ensure_chat_for_pair(user_id: str, bot_id: str) -> dict:
+    doc = collection.find_one({"user_id": user_id, "bot_id": bot_id})
+    if doc:
+        doc["_id"] = str(doc["_id"])  # normalize
+        return doc
+    new_chat = Chat(user_id=user_id, bot_id=bot_id, chat_history=[])
+    inserted_id = collection.insert_one(new_chat.model_dump()).inserted_id
+    created = collection.find_one({"_id": inserted_id})
+    created["_id"] = str(created["_id"])  # normalize
+    return created
+
+
+def append_messages(chat_id: str, messages: list[dict]) -> int:
+    validated = []
+    for msg in messages:
+        # normalize timestamp
+        ts = msg.get("timestamp")
+        if isinstance(ts, datetime):
+            pass
+        elif isinstance(ts, str):
+            parsed = None
+            # try RFC2822/HTTP-date
+            try:
+                parsed = parsedate_to_datetime(ts)
+            except Exception:
+                parsed = None
+            # try ISO format
+            if parsed is None:
+                try:
+                    parsed = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                except Exception:
+                    parsed = None
+            msg["timestamp"] = parsed or datetime.utcnow()
+        else:
+            msg["timestamp"] = datetime.utcnow()
+
+        validated.append(ChatMessage(**msg).model_dump())
+    res = collection.update_one({"_id": ObjectId(chat_id)}, {"$push": {"chat_history": {"$each": validated}}})
+    return res.modified_count
 

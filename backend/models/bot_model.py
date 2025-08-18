@@ -2,7 +2,6 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, Literal
 
 class Bot(BaseModel):
-    uid: str
     name: str
     picture: Optional[str] = None
     likings: list[str] = []  # pro at these things

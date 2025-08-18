@@ -50,3 +50,23 @@ def get_chat_details(user_id: str, bot_id: str, chat_id: str) -> dict | None:
         doc["_id"] = str(doc["_id"])  # make JSON friendly
     return doc
 
+
+def ensure_chat_details_for_pair(user_id: str, bot_id: str, chat_id: str) -> dict:
+    doc = get_chat_details(user_id, bot_id, chat_id)
+    if doc:
+        return doc
+    details = ChatDetails(
+        user_id=user_id,
+        bot_id=bot_id,
+        chat_id=chat_id,
+        rules=[],
+        current_mood="dominant",
+        important_events=[],
+        nickname=None,
+        any_other_such_details={},
+    )
+    inserted_id = collection.insert_one(details.model_dump()).inserted_id
+    created = collection.find_one({"_id": inserted_id})
+    created["_id"] = str(created["_id"])  # normalize
+    return created
+
