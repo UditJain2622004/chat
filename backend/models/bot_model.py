@@ -16,3 +16,6 @@ class Bot(BaseModel):
     # others...(ykwim)
 
     user_id: str
+
+    chat_id: Optional[str] = None
+    chat_details_id: Optional[str] = None

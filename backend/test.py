@@ -16,10 +16,10 @@ chatHistory = [
     # {"role": "user", "content": "also, who won the 2011 ODI cricket world cup?"},
 ]
 
-llm = LLM("openrouter", "grok-3-mini", chat_history = chatHistory)
+# llm = LLM("openrouter", "grok-3-mini", chat_history = chatHistory)
 
-res = llm.chat_response("also, who won the 2011 ODI cricket world cup?")
-print(res)
+# res = llm.chat_response("also, who won the 2011 ODI cricket world cup?")
+# print(res)
 
 
 
@@ -29,3 +29,11 @@ print(res)
 
 # res = llm.chat_response("What is the capital of Pakistan?")
 # print(res)
+
+
+a = ""
+
+if a:
+    print("Yes")
+else:
+    print("NO")

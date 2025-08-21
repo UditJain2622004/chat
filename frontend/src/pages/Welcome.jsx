@@ -2,33 +2,23 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { auth } from "../firebase";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const Welcome = () => {
   const [loading, setLoading] = useState(true);
   const [bots, setBots] = useState([]);
   const [error, setError] = useState("");
 
+  const { isAuthReady, dbUserId, idToken } = useAuth();
+
   useEffect(() => {
     const loadBots = async () => {
+      if (!isAuthReady) return; // wait for auth rehydration
+      if (!dbUserId) {
+        setLoading(false);
+        return;
+      }
       try {
-        if (!auth.currentUser) {
-          setLoading(false);
-          return;
-        }
-
-        const token = await auth.currentUser.getIdToken();
-        const syncRes = await axios.post(
-          "http://127.0.0.1:5000/auth/sync-user",
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const dbUserId = syncRes.data?.user?._id;
-        if (!dbUserId) {
-          setLoading(false);
-          return;
-        }
-
         const botsRes = await axios.get(
           `http://127.0.0.1:5000/bots/?user_id=${dbUserId}`
         );
@@ -39,9 +29,8 @@ const Welcome = () => {
         setLoading(false);
       }
     };
-
     loadBots();
-  }, []);
+  }, [isAuthReady, dbUserId]);
 
   return (
     <div className="page page-welcome">

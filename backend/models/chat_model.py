@@ -12,3 +12,5 @@ class Chat(BaseModel):
     bot_id: str
     chat_history: list[ChatMessage] = []
 
+    chat_details_id: Optional[str] = None
+

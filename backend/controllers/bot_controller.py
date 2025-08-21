@@ -1,7 +1,7 @@
 from bson.objectid import ObjectId
 from mongo import db
 from models.bot_model import Bot
-from controllers import user_controller
+from controllers import user_controller, chat_controller, chat_details_controller
 
 collection = db['bots']
 
@@ -11,9 +11,28 @@ def create_bot(data: dict) -> str:
     doc = bot.model_dump(by_alias=True, exclude_none=True)
     result = collection.insert_one(doc)
 
+
+    # create chat and chat_details for the bot
+    chat_id = chat_controller.create_chat({
+        "user_id": data['user_id'],
+        "bot_id": str(result.inserted_id),
+        "chat_history": []
+    })
+
+    chat_details_id = chat_details_controller.create_chat_details({
+        "user_id": data['user_id'],
+        "bot_id": str(result.inserted_id),
+        "chat_id": chat_id,
+    })
+    
+
     # append to bot_ids in user collection
     user_controller.add_bot_to_user(data['user_id'], str(result.inserted_id))
-    
+    # update bot with chat_id and chat_details_id, chat with chat_details_id
+    update_bot(str(result.inserted_id), {"chat_id": chat_id, "chat_details_id": chat_details_id})
+    chat_controller.update_chat(chat_id, {"chat_details_id": chat_details_id})
+
+
     return str(result.inserted_id)
 
 
@@ -52,7 +71,5 @@ def get_bots_by_user_id(user_id: str) -> list[dict]:
     return items
 
 
-def is_bot_owned_by_user(bot_id: str, user_id: str) -> bool:
-    doc = collection.find_one({"_id": ObjectId(bot_id), "user_id": user_id})
-    return doc is not None
+
 

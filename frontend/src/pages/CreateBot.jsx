@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { auth } from "../firebase";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const behaviourOptions = [
   { value: "soft", label: "Soft" },
@@ -13,15 +13,7 @@ const behaviourOptions = [
 
 const CreateBot = () => {
   const navigate = useNavigate();
-  const defaultUid = useMemo(() => {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) {
-      return crypto.randomUUID();
-    }
-    return String(Date.now());
-  }, []);
-
   const [form, setForm] = useState({
-    uid: defaultUid,
     name: "",
     picture: "",
     likings: "",
@@ -32,26 +24,7 @@ const CreateBot = () => {
     skin_color: "Any",
     physique: "Any",
   });
-  const [dbUserId, setDbUserId] = useState("");
-
-  useEffect(() => {
-    const ensureDbUser = async () => {
-      if (!auth.currentUser) return;
-      try {
-        const token = await auth.currentUser.getIdToken();
-        const syncRes = await axios.post(
-          "http://127.0.0.1:5000/auth/sync-user",
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const id = syncRes.data?.user?._id;
-        if (id) setDbUserId(id);
-      } catch (e) {
-        // no-op; user creation will fail without user id
-      }
-    };
-    ensureDbUser();
-  }, []);
+  const { dbUserId, isAuthReady } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,10 +34,8 @@ const CreateBot = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        // create a random uid string for the bot
-        const uid = Math.random().toString(36).substring(2, 15);
+      if (!dbUserId) return; // cannot create without owner
       const payload = {
-        uid: uid,
         name: form.name.trim(),
         picture: form.picture.trim() || undefined,
         likings: form.likings
@@ -97,17 +68,7 @@ const CreateBot = () => {
           <p>Define their persona and appearance</p>
         </div>
         <form onSubmit={handleSubmit} className="auth-form">
-          {/* <div className="form-field">
-            <label>Bot UID</label>
-            <input
-              name="uid"
-              type="text"
-              value={form.uid}
-              onChange={handleChange}
-              placeholder="Unique identifier for the bot"
-              required
-            />
-          </div> */}
+
 
           <div className="form-field">
             <label>Name</label>

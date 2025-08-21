@@ -40,8 +40,6 @@ def delete_user(user_id: str) -> int:
     return result.deleted_count
 
 
-
-
 def add_bot_to_user(user_id: str, bot_id: str) -> int:
     result = collection.update_one(
         {"_id": ObjectId(user_id)},
