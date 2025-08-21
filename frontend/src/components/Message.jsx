@@ -46,6 +46,11 @@ const Message = ({ role, content, messageIndex, animate = false, typingOnly = fa
     const maxDelay = 10000; // cap to avoid excessive waits
     const afterSegmentDelay = 500; // wait after each shown segment before showing dots
 
+    // After the first segment is shown, schedule the typing dots for the gap before the next segment
+    setShowTyping(false);
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => setShowTyping(true), afterSegmentDelay);
+
     let cumulative = 0;
     for (let i = 1; i < segments.length; i += 1) {
       const seg = segments[i];
