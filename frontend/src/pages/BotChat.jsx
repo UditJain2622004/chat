@@ -4,6 +4,7 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext.jsx";
 import Message from "../components/Message.jsx";
+import useStickToBottom from "../hooks/useStickToBottom";
 
 const BotChat = () => {
   const { botId } = useParams();
@@ -22,14 +23,13 @@ const BotChat = () => {
   const SEND_IDLE_MS = 2000; // idle window before sending to backend
   const [isBotTyping, setIsBotTyping] = useState(false);
 
-  const scrollToBottom = useCallback((behavior = "smooth") => {
-    if (bottomRef.current && bottomRef.current.scrollIntoView) {
-      bottomRef.current.scrollIntoView({ behavior, block: "end" });
-      return;
-    }
-    const el = listRef.current || document.getElementById("botchat-messages");
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior });
-  }, []);
+  const { scrollToBottom } = useStickToBottom({
+    containerRef: listRef,
+    bottomRef,
+    enabled: true,
+    threshold: 40,
+    behaviorPinned: "smooth",
+  });
 
   useEffect(() => {
     const fetchBot = async () => {
@@ -76,25 +76,10 @@ const BotChat = () => {
     loadHistory();
   }, [isAuthReady, dbUserId, botId, scrollToBottom]);
 
-  // Auto-scroll on history load or when messages length changes
+  // Keep pinned on initial loads
   useEffect(() => {
     scrollToBottom("auto");
   }, [isAuthReady, dbUserId, botId, scrollToBottom]);
-
-  useEffect(() => {
-    scrollToBottom("smooth");
-  }, [messages.length, scrollToBottom]);
-
-  // Ensure we scroll into view right after the typing indicator mounts
-  useEffect(() => {
-    if (isBotTyping) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          scrollToBottom("smooth");
-        });
-      });
-    }
-  }, [isBotTyping, scrollToBottom]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -123,7 +108,6 @@ const BotChat = () => {
     if (!hasPendingSendRef.current) return;
     hasPendingSendRef.current = false;
     setIsBotTyping(true);
-    requestAnimationFrame(() => scrollToBottom("smooth"));
 
     const currentMessages = messagesRef.current || [];
     const payloadMessages = currentMessages.map(({ role, content, timestamp }) => ({ role, content, timestamp }));
@@ -136,6 +120,8 @@ const BotChat = () => {
       });
       const reply = res?.data?.reply;
       if (reply) {
+        // Hide typing indicator before rendering the new assistant message
+        setIsBotTyping(false);
         const replyWithAnimate = { ...reply, animate: true };
         setMessages((prev) => [...prev, replyWithAnimate]);
         requestAnimationFrame(() => scrollToBottom("smooth"));
@@ -155,18 +141,7 @@ const BotChat = () => {
     }, SEND_IDLE_MS);
   }, [clearSendTimer, performSend]);
 
-  const handleProgress = useCallback((phase) => {
-    if (phase === "done") {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          scrollToBottom("auto");
-          setTimeout(() => scrollToBottom("auto"), 0);
-        });
-      });
-    } else {
-      requestAnimationFrame(() => scrollToBottom("smooth"));
-    }
-  }, [scrollToBottom]);
+  // Stick-to-bottom hook handles scrolling; no per-message progress scrolling needed
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -228,7 +203,6 @@ const BotChat = () => {
                   content={m.content}
                   messageIndex={idx}
                   animate={m.animate}
-                  onProgress={handleProgress}
                 />
               ))}
               {isBotTyping && (

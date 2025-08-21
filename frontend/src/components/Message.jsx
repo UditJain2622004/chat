@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-const Message = ({ role, content, messageIndex, animate = false, onProgress, typingOnly = false }) => {
+const Message = ({ role, content, messageIndex, animate = false, typingOnly = false }) => {
   const extractSegments = (text) => {
     if (typeof text !== "string") return [String(text ?? "")];
     const regex = /<msg>([\s\S]*?)<\/msg>/g;
@@ -25,11 +25,8 @@ const Message = ({ role, content, messageIndex, animate = false, onProgress, typ
   const shouldAnimate = animate && role !== "user" && segments.length > 1;
   const [visibleCount, setVisibleCount] = useState(shouldAnimate ? 1 : segments.length);
   const timeoutsRef = useRef([]);
-  const onProgressRef = useRef(onProgress);
-
-  useEffect(() => {
-    onProgressRef.current = onProgress;
-  }, [onProgress]);
+  const typingTimerRef = useRef(null);
+  const [showTyping, setShowTyping] = useState(false);
 
   useEffect(() => {
     // Reset visible segments and timers whenever content or role changes
@@ -43,9 +40,11 @@ const Message = ({ role, content, messageIndex, animate = false, onProgress, typ
 
     setVisibleCount(1);
 
+
     const msPerChar = 150; // typing-like delay per character
     const minDelay = 2500; // minimum delay per segment
     const maxDelay = 10000; // cap to avoid excessive waits
+    const afterSegmentDelay = 500; // wait after each shown segment before showing dots
 
     let cumulative = 0;
     for (let i = 1; i < segments.length; i += 1) {
@@ -53,10 +52,11 @@ const Message = ({ role, content, messageIndex, animate = false, onProgress, typ
       const segDelay = Math.min(Math.max(seg.length * msPerChar, minDelay), maxDelay);
       cumulative += segDelay;
       const id = setTimeout(() => {
-        setVisibleCount((prev) => {
-          // Only increase, in case of overlapping timers
-          return Math.max(prev, i + 1);
-        });
+        setVisibleCount((prev) => Math.max(prev, i + 1));
+        // Hide dots immediately after revealing a segment; the separate effect will re-show after delay
+        setShowTyping(false);
+        if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+        typingTimerRef.current = setTimeout(() => setShowTyping(true), afterSegmentDelay);
       }, cumulative);
       timeoutsRef.current.push(id);
     }
@@ -64,18 +64,21 @@ const Message = ({ role, content, messageIndex, animate = false, onProgress, typ
     return () => {
       timeoutsRef.current.forEach((id) => clearTimeout(id));
       timeoutsRef.current = [];
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     };
   }, [role, shouldAnimate, segments]);
 
-  // Notify parent to scroll after each reveal commit
+  // Also guard the typing bubble at boundaries
   useEffect(() => {
-    if (!shouldAnimate || typeof onProgressRef.current !== "function") return () => {};
-    const isDone = visibleCount >= segments.length;
-    const rafId = requestAnimationFrame(() => {
-      onProgressRef.current && onProgressRef.current(isDone ? "done" : "step");
-    });
-    return () => cancelAnimationFrame(rafId);
-  }, [visibleCount, shouldAnimate, segments.length]);
+    if (!shouldAnimate || visibleCount >= segments.length) {
+      setShowTyping(false);
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      return () => {};
+    }
+    return () => {};
+  }, [shouldAnimate, visibleCount, segments.length]);
+
+  // No per-message scrolling; container handles stick-to-bottom
 
   const segmentsToRender = shouldAnimate ? segments.slice(0, visibleCount) : segments;
 
@@ -106,7 +109,7 @@ const Message = ({ role, content, messageIndex, animate = false, onProgress, typ
           </div>
         </div>
       ))}
-      {shouldAnimate && visibleCount < segments.length && (
+      {shouldAnimate && visibleCount < segments.length && showTyping && (
         <div className={`message ${messageClass} typing`}>
           {showAvatar && <div className="message-avatar">{avatarText}</div>}
           <div className="message-content">
