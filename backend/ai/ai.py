@@ -21,7 +21,7 @@ def format_message(message, role):
 
 
 class LLM:
-    def __init__(self, provider, model_name, system_prompt = "You are a helpful assistant.", chat_history = []):
+    def __init__(self, provider, model_name, system_prompt = "You are a helpful assistant.", chat_history = [], response_format = None):
         self.provider = provider
         if provider in llm_id_map:
             self.model_name = llm_id_map[provider].get(model_name, model_name)
@@ -30,14 +30,18 @@ class LLM:
 
         self.system_prompt = system_prompt
         self.chat_history = chat_history
+        self.response_format = None if response_format is None else {
+            "type": "json_schema",
+            "json_schema": response_format
+            }
 
-    def chat_response(self, user_message):
+    def chat(self, user_message):
         self.chat_history.append({"role": "user", "content": user_message})
-        response = self.generate_response(user_message, chat_history=True)
+        response = self.respond(user_message, chat_history=True)
         self.chat_history.append({"role": "assistant", "content": response})
         return response
 
-    def generate_response(self, user_message, chat_history=False):
+    def respond(self, user_message, chat_history=False):
         if self.provider == "openrouter":
             api_key = os.getenv("OPENROUTER_API_KEY")
             client = OpenAI(
@@ -60,7 +64,10 @@ class LLM:
                     "reasoning_effort": "low"
                 },
                 model=self.model_name,
-                messages=messages
+                messages=messages,
+                # add response format only if it not None
+                response_format=None if self.response_format is None else self.response_format
+
             )
 
             # print(completion)

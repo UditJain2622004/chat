@@ -51,9 +51,12 @@ def get_latest_user_messages(messages: list[dict]) -> list[dict]:
 
     pending = messages[last_assistant_index + 1:] if last_assistant_index >= 0 else messages
     new_user_messages = [m for m in pending if isinstance(m, dict) and m.get('role') == 'user']
-    # enclose each message in <msg></msg> tag and make a single string
-    # new_user_messages = ["<msg>" + m['content'] + "</msg>" for m in new_user_messages]
-    # new_user_messages = " ".join(new_user_messages)
+
+    # prepend timestamp to each message in the format of YYYY-MM-DD HH:MM:SS. Form frontend, timestamp is sent as follows - timestamp: new Date().toISOString()
+    # for msg in new_user_messages:
+    #     msg['content'] = f"<timestamp>{msg['timestamp']}</timestamp>\n{msg['content']}"
+    
+
 
     return new_user_messages
 

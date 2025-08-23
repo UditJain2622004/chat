@@ -18,16 +18,16 @@ chatHistory = [
 
 # llm = LLM("openrouter", "grok-3-mini", chat_history = chatHistory)
 
-# res = llm.chat_response("also, who won the 2011 ODI cricket world cup?")
+# res = llm.chat("also, who won the 2011 ODI cricket world cup?")
 # print(res)
 
 
 
 
-# res = llm.generate_response("What is the capital of France?")
+# res = llm.respond("What is the capital of France?")
 # print(res)
 
-# res = llm.chat_response("What is the capital of Pakistan?")
+# res = llm.chat("What is the capital of Pakistan?")
 # print(res)
 
 

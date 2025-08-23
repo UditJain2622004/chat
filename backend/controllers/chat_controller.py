@@ -111,13 +111,17 @@ def reply(data: dict) -> tuple[dict, int]:
     if new_user_messages:
         append_messages(bot_doc['chat_id'], new_user_messages)
 
-    ai_res = ai_reply(user_id, bot_id, bot_doc['chat_id'], new_user_messages[-1]['content'])
+    ai_res = ai_reply(user_id, bot_id, bot_doc['chat_id'], new_user_messages)
+
+    # if ai_res['status'] == 'failed':
+    #     return {"message": ai_res['failure_reason']}, 400
+
     # print(ai_res)
-    append_messages(bot_doc['chat_id'], [ai_res])
+    append_messages(bot_doc['chat_id'], [ai_res['response']])
 
     # final_chat = get_chat_by_id(chat_doc['_id'])
     time.sleep(3)
     return {
         # "chat": final_chat,
-        "reply": ai_res,
+        "reply": ai_res['response'],
     }, 200
