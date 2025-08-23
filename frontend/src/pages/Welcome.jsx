@@ -9,7 +9,7 @@ const Welcome = () => {
   const [bots, setBots] = useState([]);
   const [error, setError] = useState("");
 
-  const { isAuthReady, dbUserId, idToken } = useAuth();
+  const { isAuthReady, dbUserId, idToken, firebaseUser } = useAuth();
 
   useEffect(() => {
     const loadBots = async () => {
@@ -22,6 +22,7 @@ const Welcome = () => {
         const botsRes = await axios.get(
           `http://127.0.0.1:5000/bots/?user_id=${dbUserId}`
         );
+        // console.log(botsRes);
         setBots(Array.isArray(botsRes.data) ? botsRes.data : []);
       } catch (e) {
         setError("Failed to load bots");

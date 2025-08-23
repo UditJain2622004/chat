@@ -31,49 +31,106 @@ const BotChat = () => {
     behaviorPinned: "smooth",
   });
 
+  const [chatList, setChatList] = useState([]);
+  const [activeChatId, setActiveChatId] = useState(null);
+
+  // Single initial load: fetch bot and chats together
   useEffect(() => {
-    const fetchBot = async () => {
+    const fetchBotAndChats = async () => {
+      if (!isAuthReady || !dbUserId) return;
+      setLoading(true);
       try {
-        const res = await axios.get(`http://127.0.0.1:5000/bots/${botId}`);
-        setBot(res.data || null);
+        const res = await axios.get(`http://127.0.0.1:5000/chats/bot`, {
+          params: { bot_id: botId, user_id: dbUserId },
+        });
+        const botDoc = res?.data?.bot || null;
+        const chats = Array.isArray(res?.data?.chats) ? res.data.chats : [];
+        setBot(botDoc);
+        setChatList(chats);
+        if (chats.length > 0) {
+          const firstChat = chats[0];
+          setActiveChatId(firstChat._id || null);
+          const history = Array.isArray(firstChat.chat_history) ? firstChat.chat_history : [];
+          const transformed = history.map((m) => ({
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp,
+            animate: false,
+          }));
+          setMessages(transformed);
+        } else {
+          setMessages([
+            {
+              role: "assistant",
+              content: `Hi, I'm your bot. Ask me anything!`,
+              animate: false,
+            },
+          ]);
+        }
       } catch (e) {
-        setError("Failed to load bot");
+        setError("Failed to load bot/chats");
       } finally {
         setLoading(false);
       }
     };
-    fetchBot();
-  }, [botId]);
+    fetchBotAndChats();
+  }, [botId, isAuthReady, dbUserId]);
 
-  // Load chat history for this user+bot, if any
-  useEffect(() => {
-    const loadHistory = async () => {
-      if (!isAuthReady || !dbUserId) return;
-      try {
-        const res = await axios.get(`http://127.0.0.1:5000/chats/`, {
-          params: { bot_id: botId, user_id: dbUserId },
-        });
-        const history = Array.isArray(res.data?.chat_history) ? res.data.chat_history : [];
-        const transformed = history.map((m) => ({
+  // Allow switching the visible chat by clicking an id in sidebar
+  const handleSelectChat = useCallback((chatId) => {
+    if (!chatList || chatList.length === 0) return;
+    const found = chatList.find((c) => c._id === chatId);
+    if (!found) return;
+    setActiveChatId(chatId);
+    // Optimistic local render
+    const history = Array.isArray(found.chat_history) ? found.chat_history : [];
+    const transformed = history.map((m) => ({
+      role: m.role,
+      content: m.content,
+      timestamp: m.timestamp,
+      animate: false,
+    }));
+    setMessages(transformed);
+    requestAnimationFrame(() => scrollToBottom("auto"));
+
+    // Fetch latest from backend to ensure freshness
+    axios
+      .get(`http://127.0.0.1:5000/chats/id/${chatId}`)
+      .then((res) => {
+        const latest = Array.isArray(res?.data?.chat_history) ? res.data.chat_history : [];
+        const transformedLatest = latest.map((m) => ({
           role: m.role,
           content: m.content,
           timestamp: m.timestamp,
           animate: false,
         }));
-        setMessages(transformed);
-      } catch (err) {
-        console.log(err)
-        // No chat found; seed a local opener (not persisted until first send)
-        setMessages([
-          {
-            role: "assistant",
-            content: `Hi, I'm your bot. Ask me anything!`,
-            animate: false,
-          },
-        ]);
+        setMessages(transformedLatest);
+        requestAnimationFrame(() => scrollToBottom("auto"));
+      })
+      .catch(() => {
+        // keep optimistic state on failure
+      });
+  }, [chatList, scrollToBottom]);
+
+  const handleNewChat = useCallback(async () => {
+    if (!isAuthReady || !dbUserId) return;
+    try {
+      const res = await axios.post(`http://127.0.0.1:5000/chats/`, {
+        user_id: dbUserId,
+        bot_id: botId,
+        chat_history: [],
+      });
+      const newId = res?.data?._id;
+      if (newId) {
+        const newChat = { _id: newId, user_id: dbUserId, bot_id: botId, chat_history: [] };
+        setChatList((prev) => [newChat, ...prev]);
+        setActiveChatId(newId);
+        setMessages([]);
+        requestAnimationFrame(() => scrollToBottom("auto"));
       }
-    };
-    loadHistory();
+    } catch (e) {
+      setError("Failed to create chat");
+    }
   }, [isAuthReady, dbUserId, botId, scrollToBottom]);
 
   // Keep pinned on initial loads
@@ -113,9 +170,20 @@ const BotChat = () => {
     const payloadMessages = currentMessages.map(({ role, content, timestamp }) => ({ role, content, timestamp }));
 
     try {
+      // Ensure we have a chat to send to
+      let chatIdToUse = activeChatId;
+      if (!chatIdToUse) {
+        await handleNewChat();
+        chatIdToUse = activeChatId;
+        if (!chatIdToUse) {
+          setIsBotTyping(false);
+          return;
+        }
+      }
       const res = await axios.post("http://127.0.0.1:5000/chats/send", {
         user_id: dbUserId,
         bot_id: botId,
+        chat_id: chatIdToUse,
         messages: payloadMessages,
       });
       const reply = res?.data?.reply;
@@ -131,7 +199,7 @@ const BotChat = () => {
     } finally {
       setIsBotTyping(false);
     }
-  }, [isAuthReady, dbUserId, botId, scrollToBottom, clearSendTimer]);
+  }, [isAuthReady, dbUserId, botId, activeChatId, handleNewChat, scrollToBottom, clearSendTimer]);
 
   const scheduleBackendSend = useCallback(() => {
     hasPendingSendRef.current = true;
@@ -161,10 +229,28 @@ const BotChat = () => {
         <aside className="sidebar">
           <div className="sidebar-header">
             <Link to="/welcome" className="btn btn-secondary btn-block">← Back</Link>
-            <h3>Tasks</h3>
+            <h3>Chats</h3>
+            <button type="button" className="btn btn-primary btn-block" onClick={handleNewChat}>+ New chat</button>
           </div>
           <div className="sidebar-content">
-            <p className="muted">No tasks yet.</p>
+            {chatList && chatList.length > 0 ? (
+              <ul className="list">
+                {chatList.map((c) => (
+                  <li key={c._id}>
+                    <button
+                      type="button"
+                      className={`btn btn-link ${activeChatId === c._id ? 'active-chat' : ''}`}
+                      onClick={() => handleSelectChat(c._id)}
+                      title={c._id}
+                    >
+                      {c._id}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">No chats yet.</p>
+            )}
           </div>
         </aside>
 

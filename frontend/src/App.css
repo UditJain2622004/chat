@@ -525,3 +525,8 @@
   position: relative;
   overflow: hidden;
 }
+
+.active-chat{
+  background: var(--accent);
+  color: var(--accent-contrast);
+}

@@ -4,8 +4,7 @@ from models.chat_model import Chat, ChatMessage
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from flask import jsonify
-from controllers.utils import append_messages, get_latest_user_messages, is_bot_owned_by_user
-from controllers.chat_details_controller import ensure_chat_details_for_pair
+from controllers.utils import append_messages, get_latest_user_messages, is_chat_owned_by_user
 from ai.main import ai_reply
 import time
 
@@ -47,6 +46,7 @@ def list_chats(query: dict | None = None) -> list[dict]:
 
 
 def update_chat(chat_id: str, update_fields: dict) -> int:
+    update_fields["updated_at"] = datetime.now()
     # If updating chat_history, validate messages
     if 'chat_history' in update_fields and isinstance(update_fields['chat_history'], list):
         validated_messages = []
@@ -63,11 +63,13 @@ def delete_chat(chat_id: str) -> int:
     return result.deleted_count
 
 
-def get_chat_by_bot_and_user(bot_id: str, user_id: str) -> dict | None:
-    doc = collection.find_one({"bot_id": bot_id, "user_id": user_id})
-    if doc:
+def get_chat_by_bot_and_user(bot_id: str, user_id: str) -> list[dict]:
+    items: list[dict] = []
+    docs = collection.find({"bot_id": bot_id, "user_id": user_id})
+    for doc in docs:
         doc["_id"] = str(doc["_id"])  # make JSON friendly
-    return doc
+        items.append(doc)
+    return items
 
 def ensure_chat_for_pair(user_id: str, bot_id: str) -> dict:
     doc = collection.find_one({"user_id": user_id, "bot_id": bot_id})
@@ -85,21 +87,31 @@ def reply(data: dict) -> tuple[dict, int]:
 
     user_id = data.get('user_id')
     bot_id = data.get('bot_id')
+    chat_id = data.get('chat_id')
     messages = data.get('messages', [])
+
+    print(user_id, bot_id, chat_id)
 
     # print(user_id, bot_id)
 
     if not user_id or not bot_id or not isinstance(messages, list):
         return {"message": "user_id, bot_id and messages are required"}, 400
+    if not chat_id:
+        return {"message": "chat_id is required"}, 400
 
     # TODO: maybe remove this check if found a better way to ensure user can access only their bots
-    bot_owned, bot_doc = is_bot_owned_by_user(bot_id, user_id)
+    bot_owned, bot_doc = is_chat_owned_by_user(bot_id, user_id, chat_id)
     if not bot_owned:
         return {"message": "Unauthorized"}, 403
 
 
-    # chat_doc = ensure_chat_for_pair(user_id, bot_id)
-    # ensure_chat_details_for_pair(user_id, bot_id, chat_doc['_id'])
+    # Validate chat belongs to the user and bot
+    try:
+        chat_doc = collection.find_one({"_id": ObjectId(chat_id), "user_id": user_id, "bot_id": bot_id})
+    except Exception:
+        chat_doc = None
+    if not chat_doc:
+        return {"message": "Chat not found for this user and bot"}, 404
 
 
     # Determine only the new user messages to append: slice after last assistant
@@ -109,15 +121,15 @@ def reply(data: dict) -> tuple[dict, int]:
 
     # TODO: maybe append the user messages and ai reply together instead of separately to save a db call
     if new_user_messages:
-        append_messages(bot_doc['chat_id'], new_user_messages)
+        append_messages(chat_id, new_user_messages)
 
-    ai_res = ai_reply(user_id, bot_id, bot_doc['chat_id'], new_user_messages)
+    ai_res = ai_reply(user_id, bot_id, chat_id, new_user_messages)
 
     # if ai_res['status'] == 'failed':
     #     return {"message": ai_res['failure_reason']}, 400
 
     # print(ai_res)
-    append_messages(bot_doc['chat_id'], [ai_res['response']])
+    append_messages(chat_id, [ai_res['response']])
 
     # final_chat = get_chat_by_id(chat_doc['_id'])
     time.sleep(3)

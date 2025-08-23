@@ -36,7 +36,7 @@ def append_messages(chat_id: str, messages: list[dict]) -> int:
             msg["timestamp"] = datetime.utcnow()
 
         validated.append(ChatMessage(**msg).model_dump())
-    res = chat_collection.update_one({"_id": ObjectId(chat_id)}, {"$push": {"chat_history": {"$each": validated}}})
+    res = chat_collection.update_one({"_id": ObjectId(chat_id)}, {"$push": {"chat_history": {"$each": validated}}, "$set": {"updated_at": datetime.now()}})
     return res.modified_count
 
 def get_latest_user_messages(messages: list[dict]) -> list[dict]:
@@ -61,6 +61,6 @@ def get_latest_user_messages(messages: list[dict]) -> list[dict]:
     return new_user_messages
 
 
-def is_bot_owned_by_user(bot_id: str, user_id: str) -> tuple[bool, dict]:
-    doc = bot_collection.find_one({"_id": ObjectId(bot_id), "user_id": user_id})
+def is_chat_owned_by_user(bot_id: str, user_id: str, chat_id: str) -> tuple[bool, dict]:
+    doc = chat_collection.find_one({"_id": ObjectId(chat_id), "bot_id": bot_id, "user_id": user_id})
     return doc is not None, doc if doc is not None else {}

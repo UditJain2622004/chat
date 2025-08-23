@@ -6,7 +6,6 @@ from controllers.auth_controller import auth_bp
 from routes.user_routes import users_bp
 from routes.bot_routes import bots_bp
 from routes.chat_routes import chats_bp
-from routes.chat_details_routes import chat_details_bp
 
 app = Flask(__name__)
 
@@ -18,7 +17,6 @@ app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(users_bp, url_prefix='/users')
 app.register_blueprint(bots_bp, url_prefix='/bots')
 app.register_blueprint(chats_bp, url_prefix='/chats')
-app.register_blueprint(chat_details_bp, url_prefix='/chat-details')
 
 @app.route('/')
 def home():

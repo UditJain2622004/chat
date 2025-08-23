@@ -1,7 +1,7 @@
 from bson.objectid import ObjectId
 from mongo import db
 from models.user_model import User
-
+from datetime import datetime
 
 collection = db['users']
 
@@ -31,6 +31,7 @@ def list_users(query: dict | None = None) -> list[dict]:
 
 
 def update_user(user_id: str, update_fields: dict) -> int:
+    update_fields["updated_at"] = datetime.now()
     result = collection.update_one({"_id": ObjectId(user_id)}, {"$set": update_fields})
     return result.modified_count
 
@@ -41,10 +42,16 @@ def delete_user(user_id: str) -> int:
 
 
 def add_bot_to_user(user_id: str, bot_id: str) -> int:
+    # Always update timestamp
+    update_fields = {"updated_at": datetime.now()}
+
+    # Add bot_id to bot_ids using addToSet
     result = collection.update_one(
         {"_id": ObjectId(user_id)},
-        {"$addToSet": {"bot_ids": bot_id}}  # appends safely
+        {"$addToSet": {"bot_ids": bot_id}, "$set": update_fields}
     )
     return result.modified_count
 
 
+
+    

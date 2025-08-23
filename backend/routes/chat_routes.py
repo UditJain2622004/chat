@@ -9,7 +9,7 @@ from controllers.chat_controller import (
     ensure_chat_for_pair,
     reply,
 )
-
+from controllers.bot_controller import get_bot_by_id
 
 
 chats_bp = Blueprint('chats', __name__)
@@ -26,16 +26,19 @@ def route_create_chat():
 
 @chats_bp.route('/', methods=['GET'])
 def route_list_chats():
+    chats = list_chats()
+    return jsonify({"chats": chats}), 200
+
+
+@chats_bp.route('/bot', methods=['GET'])
+def route_get_chat_by_bot_and_user():
     bot_id = request.args.get('bot_id')
     user_id = request.args.get('user_id')
-    if bot_id and user_id:
-        chat = get_chat_by_bot_and_user(bot_id, user_id)
-        if not chat:
-            return jsonify({"message": "Chat not found"}), 404
-        return jsonify(chat), 200
-    chats = list_chats()
-    return jsonify(chats), 200
-
+    if not bot_id or not user_id:
+        return jsonify({"message": "Bot ID and user ID are required"}), 400
+    bot = get_bot_by_id(bot_id)
+    chats = get_chat_by_bot_and_user(bot_id, user_id)
+    return jsonify({"chats": chats, "bot": bot, "user_id": user_id}), 200
 
 @chats_bp.route('/id/<chat_id>', methods=['GET'])
 def route_get_chat(chat_id: str):

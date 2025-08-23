@@ -1,9 +1,12 @@
 from bson.objectid import ObjectId
 from mongo import db
 from models.bot_model import Bot
-from controllers import user_controller, chat_controller, chat_details_controller
+from controllers import user_controller, chat_controller
+from datetime import datetime
+from models.user_model import BotAndChat
 
 collection = db['bots']
+user_collection = db['users']
 
 
 def create_bot(data: dict) -> str:
@@ -12,25 +15,20 @@ def create_bot(data: dict) -> str:
     result = collection.insert_one(doc)
 
 
-    # create chat and chat_details for the bot
+    # create chat for the bot
     chat_id = chat_controller.create_chat({
         "user_id": data['user_id'],
         "bot_id": str(result.inserted_id),
         "chat_history": []
     })
 
-    chat_details_id = chat_details_controller.create_chat_details({
-        "user_id": data['user_id'],
-        "bot_id": str(result.inserted_id),
-        "chat_id": chat_id,
-    })
-    
 
+    
     # append to bot_ids in user collection
-    user_controller.add_bot_to_user(data['user_id'], str(result.inserted_id))
-    # update bot with chat_id and chat_details_id, chat with chat_details_id
-    update_bot(str(result.inserted_id), {"chat_id": chat_id, "chat_details_id": chat_details_id})
-    chat_controller.update_chat(chat_id, {"chat_details_id": chat_details_id})
+    user_controller.add_bot_to_user(data['user_id'], bot_id=str(result.inserted_id))
+
+    # update bot with chat_id
+    # update_bot(str(result.inserted_id), {"chat_id": chat_id})
 
 
     return str(result.inserted_id)
@@ -54,6 +52,7 @@ def list_bots(query: dict | None = None) -> list[dict]:
 
 
 def update_bot(bot_id: str, update_fields: dict) -> int:
+    update_fields["updated_at"] = datetime.now()
     result = collection.update_one({"_id": ObjectId(bot_id)}, {"$set": update_fields})
     return result.modified_count
 
@@ -65,9 +64,16 @@ def delete_bot(bot_id: str) -> int:
 
 def get_bots_by_user_id(user_id: str) -> list[dict]:
     items: list[dict] = []
-    for doc in collection.find({"user_id": user_id}):
+    user = user_collection.find_one({"_id": ObjectId(user_id)})
+    print(user)
+    bot_ids = [ObjectId(bot_id) for bot_id in user['bot_ids']]
+    print(bot_ids)  
+    
+    docs = collection.find({"_id": {"$in": bot_ids}})
+    for doc in docs:
         doc["_id"] = str(doc["_id"])  # make JSON friendly
         items.append(doc)
+    print(items)
     return items
 
 
