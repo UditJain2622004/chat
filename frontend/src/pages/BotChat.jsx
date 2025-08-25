@@ -188,6 +188,7 @@ const BotChat = () => {
         bot_id: botId,
         chat_id: chatIdToUse,
         messages: payloadMessages,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       });
       const reply = res?.data?.reply;
       if (reply) {
@@ -218,7 +219,13 @@ const BotChat = () => {
     e.preventDefault();
     if (!input.trim() || !isAuthReady || !dbUserId) return;
 
-    const userMessage = { role: "user", content: input.trim(), timestamp: new Date().toISOString(), animate: false };
+    const currentTimestamp = new Date();
+    // console.log(currentTimestamp);  Mon Aug 25 2025 13:50:28 GMT+0530 (India Standard Time)
+    // console.log(currentTimestamp.toLocaleString()); 8/25/2025, 1:50:28 PM
+    
+    
+    const message = `<timestamp>${currentTimestamp}</timestamp>\n<msg>${input.trim()}</msg>`
+    const userMessage = { role: "user", content: message, timestamp: new Date().toISOString(), animate: false };
     const pending = [...messages, userMessage];
     setMessages(pending);
     setInput("");

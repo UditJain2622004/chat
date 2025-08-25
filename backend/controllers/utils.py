@@ -1,8 +1,9 @@
 from bson.objectid import ObjectId
 from mongo import db
 from models.chat_model import Chat, ChatMessage
-from datetime import datetime
+from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+from zoneinfo import ZoneInfo
 
 
 chat_collection = db['chats']
@@ -64,3 +65,14 @@ def get_latest_user_messages(messages: list[dict]) -> list[dict]:
 def is_chat_owned_by_user(bot_id: str, user_id: str, chat_id: str) -> tuple[bool, dict]:
     doc = chat_collection.find_one({"_id": ObjectId(chat_id), "bot_id": bot_id, "user_id": user_id})
     return doc is not None, doc if doc is not None else {}
+
+
+def get_current_time(user_timezone: str):
+    # get current time in UTC
+    now_utc = datetime.now(timezone.utc)
+    
+    # convert to user's timezone
+    now_local = now_utc.astimezone(ZoneInfo(user_timezone))
+    
+    # format like JS new Date().toString()
+    return now_local.strftime("%a %b %d %Y %H:%M:%S GMT%z (%Z)")

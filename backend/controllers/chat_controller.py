@@ -7,7 +7,9 @@ from flask import jsonify
 from controllers.utils import append_messages, get_latest_user_messages, is_chat_owned_by_user
 from ai.main import ai_reply, dummy_ai_reply
 import time
-
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from controllers.utils import get_current_time
 
 collection = db['chats']
 
@@ -89,10 +91,16 @@ def reply(data: dict) -> tuple[dict, int]:
     bot_id = data.get('bot_id')
     chat_id = data.get('chat_id')
     user_messages = data.get('messages', [])
+    timezone = data.get('timezone')
 
     print("Latest User Messages: ", user_messages)
 
-    # print(user_id, bot_id)
+    # print(timezone)
+    # print(get_current_time(timezone))
+    # return {
+    #     "reply": {"role":"assistant","content":"hi"},
+    # }, 200
+    
 
     if not user_id or not bot_id or not isinstance(user_messages, list):
         return {"message": "user_id, bot_id and messages are required"}, 400
@@ -125,6 +133,13 @@ def reply(data: dict) -> tuple[dict, int]:
     # ai_res = dummy_ai_reply(user_id, bot_id, chat_id, user_messages, chat_doc)
     ai_res = ai_reply(user_id, bot_id, chat_id, user_messages, chat_doc)
 
+    print("AI response :", ai_res['response']['content'])
+
+    # if AI accidentally includes <timestamp></timestamp> tag, remove it
+    ai_res['response']['content'] = ai_res['response']['content'].replace("<timestamp></timestamp>", "")
+    
+    # add time info to ai response
+    ai_res['response']['content'] = f"<timestamp>{get_current_time(timezone)}</timestamp>\n{ai_res['response']['content']}"
 
     # append the user messages and ai reply together
     user_messages.append(ai_res['response'])
