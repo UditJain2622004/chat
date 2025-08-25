@@ -9,7 +9,7 @@ load_dotenv()
 try:
     # Get the path to the service account key from environment variables
     cred_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-    print(cred_path)
+    # print(cred_path)
     if not cred_path:
         raise ValueError("The GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
 

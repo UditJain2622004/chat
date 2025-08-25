@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-const Message = ({ role, content, messageIndex, animate = false, typingOnly = false }) => {
+const Message = ({ role, content, messageIndex, animate = false, typingOnly = false, timestamp, botName }) => {
   const extractSegments = (text) => {
     if (typeof text !== "string") return [String(text ?? "")];
     const regex = /<msg>([\s\S]*?)<\/msg>/g;
@@ -20,7 +20,19 @@ const Message = ({ role, content, messageIndex, animate = false, typingOnly = fa
 
   const messageClass = role === "user" ? "me" : role === "system" ? "system" : "other";
   const showAvatar = role !== "system";
-  const avatarText = role === "user" ? "U" : "B";
+  const avatarText = role === "user" ? "U" : botName?.[0].toUpperCase() || "B";
+
+  const formatTimestamp = (ts) => {
+    if (!ts) return "";
+    try {
+      const d = new Date(ts);
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
+    }
+  };
+  const senderLabel = role === "user" ? "You" : role === "assistant" ? (botName || "Bot") : "";
+  const formattedTime = formatTimestamp(timestamp);
 
   const shouldAnimate = animate && role !== "user" && segments.length > 1;
   const [visibleCount, setVisibleCount] = useState(shouldAnimate ? 1 : segments.length);
@@ -110,7 +122,19 @@ const Message = ({ role, content, messageIndex, animate = false, typingOnly = fa
         <div key={`${messageIndex}-${index}`} className={`message ${messageClass}`}>
           {showAvatar && <div className="message-avatar">{avatarText}</div>}
           <div className="message-content">
-            <div className="message-bubble"><p>{seg}</p></div>
+            <div className="message-bubble">
+              {(senderLabel) && (
+                <div className="message-meta muted" style={{ fontSize: "0.75em",color:"#FF69B4", marginBottom: "0px", opacity: 0.75, fontWeight: "bold" }}>
+                  {senderLabel}
+                </div>
+              )}
+              <p style={{ margin:"2px"}}>{seg}</p>
+              {(formattedTime) && (
+                <div className="message-meta muted" style={{ fontSize: "0.60em", marginBottom: "0px", opacity: 0.50, textAlign: "right" }}>
+                  {formattedTime}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       ))}

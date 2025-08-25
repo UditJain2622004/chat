@@ -9,7 +9,7 @@ load_dotenv()
 
 MONGO_URI = os.getenv('MONGO_URI')
 client = MongoClient(MONGO_URI)
-print("")
+print("MongoDB Connection Successful")
 db = client['chat_db']  # Use your desired database name
 
 """

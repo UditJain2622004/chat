@@ -5,7 +5,7 @@ from datetime import datetime
 from email.utils import parsedate_to_datetime
 from flask import jsonify
 from controllers.utils import append_messages, get_latest_user_messages, is_chat_owned_by_user
-from ai.main import ai_reply
+from ai.main import ai_reply, dummy_ai_reply
 import time
 
 
@@ -88,13 +88,13 @@ def reply(data: dict) -> tuple[dict, int]:
     user_id = data.get('user_id')
     bot_id = data.get('bot_id')
     chat_id = data.get('chat_id')
-    messages = data.get('messages', [])
+    user_messages = data.get('messages', [])
 
-    print(user_id, bot_id, chat_id)
+    print("Latest User Messages: ", user_messages)
 
     # print(user_id, bot_id)
 
-    if not user_id or not bot_id or not isinstance(messages, list):
+    if not user_id or not bot_id or not isinstance(user_messages, list):
         return {"message": "user_id, bot_id and messages are required"}, 400
     if not chat_id:
         return {"message": "chat_id is required"}, 400
@@ -115,21 +115,20 @@ def reply(data: dict) -> tuple[dict, int]:
 
 
     # Determine only the new user messages to append: slice after last assistant
-    new_user_messages = get_latest_user_messages(messages)
-    print(new_user_messages)
+    # new_user_messages = get_latest_user_messages(user_messages)
+    # print(new_user_messages)
+
+    # get the chat history from DB =================================================================
+    chat_doc = get_chat_by_id(chat_id)
+    
+
+    # ai_res = dummy_ai_reply(user_id, bot_id, chat_id, user_messages, chat_doc)
+    ai_res = ai_reply(user_id, bot_id, chat_id, user_messages, chat_doc)
 
 
-    # TODO: maybe append the user messages and ai reply together instead of separately to save a db call
-    if new_user_messages:
-        append_messages(chat_id, new_user_messages)
-
-    ai_res = ai_reply(user_id, bot_id, chat_id, new_user_messages)
-
-    # if ai_res['status'] == 'failed':
-    #     return {"message": ai_res['failure_reason']}, 400
-
-    # print(ai_res)
-    append_messages(chat_id, [ai_res['response']])
+    # append the user messages and ai reply together
+    user_messages.append(ai_res['response'])
+    append_messages(chat_id, user_messages)
 
     # final_chat = get_chat_by_id(chat_doc['_id'])
     time.sleep(3)

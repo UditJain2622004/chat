@@ -5,6 +5,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext.jsx";
 import Message from "../components/Message.jsx";
 import useStickToBottom from "../hooks/useStickToBottom";
+import { getLatestUserMessages } from "../utils/utils";
 
 const BotChat = () => {
   const { botId } = useParams();
@@ -63,6 +64,7 @@ const BotChat = () => {
             {
               role: "assistant",
               content: `Hi, I'm your bot. Ask me anything!`,
+              timestamp: new Date().toISOString(),
               animate: false,
             },
           ]);
@@ -167,7 +169,8 @@ const BotChat = () => {
     setIsBotTyping(true);
 
     const currentMessages = messagesRef.current || [];
-    const payloadMessages = currentMessages.map(({ role, content, timestamp }) => ({ role, content, timestamp }));
+    const latestUserMessages = getLatestUserMessages(currentMessages);
+    const payloadMessages = latestUserMessages.map(({ role, content, timestamp }) => ({ role, content, timestamp }));
 
     try {
       // Ensure we have a chat to send to
@@ -190,7 +193,7 @@ const BotChat = () => {
       if (reply) {
         // Hide typing indicator before rendering the new assistant message
         setIsBotTyping(false);
-        const replyWithAnimate = { ...reply, animate: true };
+        const replyWithAnimate = { ...reply, animate: true, timestamp: reply.timestamp || new Date().toISOString() };
         setMessages((prev) => [...prev, replyWithAnimate]);
         requestAnimationFrame(() => scrollToBottom("smooth"));
       }
@@ -289,10 +292,12 @@ const BotChat = () => {
                   content={m.content}
                   messageIndex={idx}
                   animate={m.animate}
+                  timestamp={m.timestamp}
+                  botName={bot?.name}
                 />
               ))}
               {isBotTyping && (
-                <Message role="assistant" content="" messageIndex="typing" typingOnly />
+                <Message role="assistant" content="" messageIndex="typing" typingOnly botName={bot?.name} />
               )}
               <div ref={bottomRef} />
             </div>
