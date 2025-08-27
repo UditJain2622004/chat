@@ -100,7 +100,7 @@ def get_all_chat_details_by_user(user_id: str, bot_id: str, chat_id: str, remove
     else:
         result = [doc["chat_details"] for doc in chat_details_docs]
 
-    print(f"\n\nFound {len(result)} previous chats\n\n")
+    # print(f"\n\nFound {len(result)} previous chats\n\n")
     return result
 
 
@@ -143,7 +143,7 @@ def reply(data: dict) -> tuple[dict, int]:
     if not bot_doc:
         return {"message": "Bot not found"}, 404
     all_previous_chat_details_doc = get_all_chat_details_by_user(user_id, bot_id, chat_id, remove_current_chat=True)
-    print("all_previous_chat_details_doc   ------ ", all_previous_chat_details_doc)
+    # print("all_previous_chat_details_doc   ------ ", all_previous_chat_details_doc)
 
 
     # =================================================================================================================

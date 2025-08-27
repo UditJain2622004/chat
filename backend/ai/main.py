@@ -3,6 +3,7 @@ from ai.agents.prompt_verifier import prompt_verifier
 from ai.agents.main_bot import main_bot
 import json
 from ai.prompts.main_bot import MAIN_BOT_PROMPT
+from ai.tools.tool_call import call_tools
 
 def ai_reply(user_id: str, bot_id: str, chat_id: str, latest_user_messages: List[dict], user_doc: dict, bot_doc: dict, chat_doc: dict, all_previous_chat_details_doc: List[dict], verify_prompt: bool = True) -> dict:
 
@@ -29,7 +30,7 @@ def ai_reply(user_id: str, bot_id: str, chat_id: str, latest_user_messages: List
     <important_details_about_current_chat>{json.dumps(chat_details, default=str)}</important_details_about_current_chat>
     {messages_as_one_string}
     """
-    # print("transformed_message   ------ ", transformed_message)
+    print("transformed_message   ------ ", transformed_message)
 
     # system prompt transformation ============================================================================
     SYSTEM_PROMPT += f"<all_previous_chat_details>{json.dumps(all_previous_chat_details_doc, default=str)}</all_previous_chat_details>"
@@ -60,12 +61,18 @@ def ai_reply(user_id: str, bot_id: str, chat_id: str, latest_user_messages: List
 
     # generate the response =====================================================================
     res = main_bot.respond(transformed_message, system_prompt= SYSTEM_PROMPT, include_chat_history=True, chat_history=chat_history)
+    json_res = json.loads(res)
+    print("json_res   ------ ", json_res)
+    if json_res.get('tool_calls', None):
+        print("Calling Tools ---------")
+        call_tools(user_id, bot_id, chat_id, json_res['tool_calls'])
+    
     
     return {
         "status": "success",
         "response":{
             "role": "assistant",
-            "content": res
+            "content": json_res['response']
         }
     }
 

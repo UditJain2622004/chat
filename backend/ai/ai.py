@@ -58,7 +58,7 @@ class LLM:
             else:
                 messages.append(format_message(user_message, "user"))
 
-            print(f"Messages send to LLM : {messages}")
+            # print(f"Messages send to LLM : {messages}")
             # print(messages)
             completion = client.chat.completions.create(
                 # extra_headers={
