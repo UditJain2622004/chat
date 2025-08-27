@@ -4,9 +4,14 @@ from datetime import datetime
 
 class UserDetails(BaseModel):
     name: Optional[str] = None
+
     nickname: Optional[str] = None
     available_timings: Optional[str] = None
+    task_following_record: list[str] = Field(default_factory=list)
+    preferences: list[str] = Field(default_factory=list)
+    dislikes: list[str] = Field(default_factory=list)
     anything_else: list[str] = Field(default_factory=list)
+    
     updated_at: datetime = Field(default_factory=datetime.now)
 
 class User(BaseModel):

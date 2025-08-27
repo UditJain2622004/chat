@@ -62,9 +62,7 @@ def get_latest_user_messages(messages: list[dict]) -> list[dict]:
     return new_user_messages
 
 
-def is_chat_owned_by_user(bot_id: str, user_id: str, chat_id: str) -> tuple[bool, dict]:
-    doc = chat_collection.find_one({"_id": ObjectId(chat_id), "bot_id": bot_id, "user_id": user_id})
-    return doc is not None, doc if doc is not None else {}
+
 
 
 def get_current_time(user_timezone: str):

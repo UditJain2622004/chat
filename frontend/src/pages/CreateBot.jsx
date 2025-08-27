@@ -22,11 +22,6 @@ const behaviourOptions = [
   {value: "chill", label: "Chill"},
   {value: "laid_back", label: "Laid Back"},
   {value: "relaxed", label: "Relaxed"},
-  {value: "calm", label: "Calm"},
-  { value: "soft", label: "Soft" },
-  { value: "between_soft_and_hard", label: "Between Soft and Hard" },
-  { value: "hard", label: "Hard" },
-  { value: "ease_into_it", label: "Ease into it" },
 ];
 
 const CreateBot = () => {
@@ -43,7 +38,7 @@ const CreateBot = () => {
     eyes: "Any",
     skin_color: "Any",
     physique: "Any",
-    relationship: "Any",
+    relationship_with_user: "Any",
     backstory: "",
     prologue: "",
   });
@@ -60,23 +55,25 @@ const CreateBot = () => {
     try {
       if (!dbUserId) return; // cannot create without owner
       const payload = {
-        name: form.name.trim(),
-        picture: form.picture.trim() || undefined,
-        likings: form.likings
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-        behaviour: form.behaviour,
-        ethnicity: form.ethnicity || "Any",
-        age: form.age || null,
-        hair_color: form.hair_color || "Any",
-        hair_style: form.hair_style || "Any",
-        eyes: form.eyes || "Any",
-        skin_color: form.skin_color || "Any",
-        physique: form.physique || "Any",
-        relationship: form.relationship || "Any",
-        backstory: form.backstory || "",
-        prologue: form.prologue || "",
+        bot_details: {
+          name: form.name.trim(),
+          picture: form.picture.trim() || undefined,
+          likings: form.likings
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+          behaviour: form.behaviour,
+          ethnicity: form.ethnicity || "Any",
+          age: form.age || null,
+          hair_color: form.hair_color || "Any",
+          hair_style: form.hair_style || "Any",
+          eyes: form.eyes || "Any",
+          skin_color: form.skin_color || "Any",
+          physique: form.physique || "Any",
+          relationship_with_user: form.relationship_with_user || "Any",
+          backstory: (form.backstory || "").trim() || undefined,
+          prologue: (form.prologue || "").trim() || undefined,
+        },
         user_id: dbUserId,
       };
 
@@ -166,9 +163,9 @@ const CreateBot = () => {
                   <input name="hair_style" value={form.hair_style} onChange={handleChange} />
                 </div>
                 <div className="form-field">
-                  <label>Relationship</label>
-                  <input name="relationship" value={form.relationship} onChange={handleChange} />
-                </div>
+                <label>Physique</label>
+                <input name="physique" value={form.physique} onChange={handleChange} />
+              </div>
               </div>
 
               <div className="form-grid-2">
@@ -182,14 +179,11 @@ const CreateBot = () => {
                 </div>
               </div>
 
-              <div className="form-field">
-                <label>Physique</label>
-                <input name="physique" value={form.physique} onChange={handleChange} />
-              </div>
+              
 
               <div className="form-field">
                 <label>Relationship</label>
-                <input name="relationship" value={form.relationship} onChange={handleChange} />
+                <input name="relationship_with_user" value={form.relationship_with_user} onChange={handleChange} />
               </div>
 
               

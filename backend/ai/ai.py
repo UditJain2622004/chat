@@ -41,21 +41,24 @@ class LLM:
         self.chat_history.append({"role": "assistant", "content": response})
         return response
 
-    def respond(self, user_message, include_chat_history=False, chat_history=[]):
+    def respond(self, user_message, system_prompt = None, include_chat_history=False, chat_history=[]): 
+        if not system_prompt:
+            system_prompt = self.system_prompt
+
         if self.provider == "openrouter":
             api_key = os.getenv("OPENROUTER_API_KEY")
             client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",
                 api_key=api_key,
             )
-            messages = [{"role":"developer", "content": self.system_prompt}]
+            messages = [{"role":"developer", "content": system_prompt}]
             if include_chat_history:
                 messages.extend(chat_history)
                 messages.append(format_message(user_message, "user"))
             else:
                 messages.append(format_message(user_message, "user"))
 
-            # print(f"Messages send to LLM : {messages[1:]}")
+            print(f"Messages send to LLM : {messages}")
             # print(messages)
             completion = client.chat.completions.create(
                 # extra_headers={

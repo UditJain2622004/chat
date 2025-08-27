@@ -13,6 +13,7 @@ class ChatDetails(BaseModel):
     important_events: list[str] = Field(default_factory=list)
     nickname: Optional[str] = None
     any_other_such_details: Dict[str, Any] = Field(default_factory=dict)
+    user_goal: str = None
     updated_at: datetime = Field(default_factory=datetime.now)
 
 class Chat(BaseModel):

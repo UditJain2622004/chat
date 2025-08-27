@@ -3,7 +3,6 @@ from mongo import db
 from models.bot_model import Bot
 from controllers import user_controller, chat_controller
 from datetime import datetime
-from models.user_model import BotAndChat
 
 collection = db['bots']
 user_collection = db['users']

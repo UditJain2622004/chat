@@ -72,6 +72,48 @@ update_user_details_tool_schema = {
                     "properties": {
                         "nickname": {"type": "string"},
                         "available_timings": {"type": "string"},
+                        "preferences": {
+                            "type": "object",
+                            "properties": {
+                                "add": {
+                                    "type": ["string", "array"],
+                                    "items": {"type": "string"}
+                                },
+                                "remove": {
+                                    "type": ["string", "array"],
+                                    "items": {"type": "string"}
+                                }
+                            },
+                            "additionalProperties": False
+                        },
+                        "dislikes": {
+                            "type": "object",
+                            "properties": {
+                                "add": {
+                                    "type": ["string", "array"],
+                                    "items": {"type": "string"}
+                                },
+                                "remove": {
+                                    "type": ["string", "array"],
+                                    "items": {"type": "string"}
+                                }
+                            },
+                            "additionalProperties": False
+                        },
+                        "task_following_record": {
+                            "type": "object",
+                            "properties": {
+                                "add": {
+                                    "type": ["string", "array"],
+                                    "items": {"type": "string"}
+                                },
+                                "remove": {
+                                    "type": ["string", "array"],
+                                    "items": {"type": "string"}
+                                }
+                            },
+                            "additionalProperties": False
+                        }
                         "anything_else": {
                             "type": "object",
                             "properties": {

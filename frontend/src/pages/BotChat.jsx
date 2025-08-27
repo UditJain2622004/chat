@@ -269,18 +269,18 @@ const BotChat = () => {
             <div className="botchat-header">
               <div className="header-content">
                 <div className="user-info">
-                  {bot?.picture ? (
-                    <img className="avatar" src={bot.picture} alt={bot?.name} />
+                  {bot?.bot_details.picture ? (
+                    <img className="avatar" src={bot.bot_details.picture} alt={bot?.bot_details.name} />
                   ) : (
-                    <div className="avatar">{(bot?.name || "?").slice(0,1).toUpperCase()}</div>
+                    <div className="avatar">{(bot?.bot_details.name || "?").slice(0,1).toUpperCase()}</div>
                   )}
                   <div className="user-details">
-                    <h3>{loading ? "Loading..." : bot?.name || "Bot"}</h3>
+                    <h3>{loading ? "Loading..." : bot?.bot_details.name || "Bot"}</h3>
                     {!loading && (
                       <div className="status">
-                        {bot?.behaviour}
-                        {bot?.ethnicity ? ` • ${bot.ethnicity}` : ""}
-                        {bot?.physique ? ` • ${bot.physique}` : ""}
+                        {bot?.bot_details.behaviour}
+                        {bot?.bot_details.ethnicity ? ` • ${bot.bot_details.ethnicity}` : ""}
+                        {bot?.bot_details.physique ? ` • ${bot.bot_details.physique}` : ""}
                       </div>
                     )}
                   </div>
@@ -300,7 +300,7 @@ const BotChat = () => {
                   messageIndex={idx}
                   animate={m.animate}
                   timestamp={m.timestamp}
-                  botName={bot?.name}
+                  botName={bot?.bot_details.name}
                 />
               ))}
               {isBotTyping && (

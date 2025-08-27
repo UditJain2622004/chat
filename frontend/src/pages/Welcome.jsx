@@ -60,19 +60,19 @@ const Welcome = () => {
             {bots.map((bot) => (
               <Link key={bot._id} to={`/bots/${bot._id}/chat`} className="bot-card link-card">
                 <div className="bot-card-head">
-                  {bot.picture ? (
-                    <img className="bot-avatar" src={bot.picture} alt={bot.name} />
+                  {bot.bot_details.picture ? (
+                    <img className="bot-avatar" src={bot.bot_details.picture} alt={bot.bot_details.name} />
                   ) : (
-                    <div className="bot-avatar placeholder">{(bot.name || "?").slice(0,1).toUpperCase()}</div>
+                    <div className="bot-avatar placeholder">{(bot.bot_details.name || "?").slice(0,1).toUpperCase()}</div>
                   )}
                   <div className="bot-meta">
-                    <h3>{bot.name}</h3>
-                    <span className="tag">{bot.behaviour}</span>
+                    <h3>{bot.bot_details.name}</h3>
+                    <span className="tag">{bot.bot_details.behaviour}</span>
                   </div>
                 </div>
-                {Array.isArray(bot.likings) && bot.likings.length > 0 && (
+                {Array.isArray(bot.bot_details.likings) && bot.bot_details.likings.length > 0 && (
                   <div className="bot-tags">
-                    {bot.likings.map((lk, idx) => (
+                    {bot.bot_details.likings.map((lk, idx) => (
                       <span key={idx} className="chip">{lk}</span>
                     ))}
                   </div>

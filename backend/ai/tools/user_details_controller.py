@@ -48,7 +48,7 @@ def update_user_details(user_id: str, updates: Dict[str, Any]) -> int:
     pull_all_ops = {}
 
     allowed_string_fields = {"nickname", "available_timings"}
-    allowed_list_fields = {"anything_else"}
+    allowed_list_fields = {"anything_else", "preferences", "dislikes", "task_following_record"}
 
     for field, value in updates.items():
         # --- String fields ---
@@ -86,10 +86,7 @@ def update_user_details(user_id: str, updates: Dict[str, Any]) -> int:
                 for k in keys_to_remove:
                     unset_ops[f"user_details.{field}.{k}"] = ""
 
-        elif field == "name":
-            raise ValueError("Cannot update 'name' field")
-        else:
-            raise ValueError(f"Unsupported field: {field}")
+
 
     # Always update updated_at
     set_ops["updated_at"] = datetime.now()
