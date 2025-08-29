@@ -77,8 +77,6 @@ def ai_reply(user_id: str, bot_id: str, chat_id: str, latest_user_messages: List
     }
 
 
-
-
 def dummy_ai_reply() -> dict:
     return {
         "status": "success",
